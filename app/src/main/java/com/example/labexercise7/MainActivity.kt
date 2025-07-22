@@ -17,11 +17,10 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         setContent {
             MaterialTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    RecordApp(recordService)
+                    SubjectApp(recordService)
                 }
             }
         }
@@ -29,25 +28,23 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun RecordApp(recordService: RecordService) {
+fun SubjectApp(recordService: RecordService) {
+    var id by remember { mutableStateOf("") }
     var name by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
-    var records by remember { mutableStateOf(listOf<Record>()) }
-    var selectedRecord by remember { mutableStateOf<Record?>(null) }
-
+    var subjects by remember { mutableStateOf(emptyList<Subject>()) }
     val scope = rememberCoroutineScope()
 
     Column(modifier = Modifier.padding(16.dp)) {
         OutlinedTextField(
-            value = name,
-            onValueChange = { name = it },
-            label = { Text("Name") },
+            value = id,
+            onValueChange = { id = it },
+            label = { Text("Subject ID") },
             modifier = Modifier.fillMaxWidth()
         )
         OutlinedTextField(
-            value = email,
-            onValueChange = { email = it },
-            label = { Text("Email") },
+            value = name,
+            onValueChange = { name = it },
+            label = { Text("Subject Name") },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 8.dp)
@@ -56,74 +53,31 @@ fun RecordApp(recordService: RecordService) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Button(onClick = {
                 scope.launch {
-                    val success = recordService.addRecord(AddRecordRequest(name, email))
+                    val success = recordService.addSubject(AddSubjectRequest(id.toInt(), name))
                     if (success) {
+                        id = ""
                         name = ""
-                        email = ""
-                        selectedRecord = null
-                        records = recordService.getAllRecords()
+                        subjects = recordService.getSubjects()
                     }
                 }
-            }, enabled = selectedRecord == null) {
+            }) {
                 Text("Add")
             }
 
             Button(onClick = {
                 scope.launch {
-                    records = recordService.getAllRecords()
+                    subjects = recordService.getSubjects()
                 }
             }) {
                 Text("Fetch All")
-            }
-
-            Button(onClick = {
-                scope.launch {
-                    selectedRecord?.let {
-                        recordService.updateRecord(Record(id = it.id, name = name, email = email))
-                        name = ""
-                        email = ""
-                        selectedRecord = null
-                        records = recordService.getAllRecords()
-                    }
-                }
-            }, enabled = selectedRecord != null) {
-                Text("Update")
-            }
-
-            Button(onClick = {
-                scope.launch {
-                    selectedRecord?.let {
-                        recordService.deleteRecordByName(it.name)
-                        name = ""
-                        email = ""
-                        selectedRecord = null
-                        records = recordService.getAllRecords()
-                    }
-                }
-            }, enabled = selectedRecord != null) {
-                Text("Delete")
             }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
         LazyColumn {
-            items(records) { record ->
-                Row(
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp)
-                ) {
-                    Text("• ${record.name} | ${record.email}")
-                    Button(onClick = {
-                        name = record.name
-                        email = record.email
-                        selectedRecord = record
-                    }) {
-                        Text("Select")
-                    }
-                }
+            items(subjects) { subject ->
+                Text("• ${subject.id} - ${subject.name}")
             }
         }
     }

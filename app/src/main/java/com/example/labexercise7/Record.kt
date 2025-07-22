@@ -8,3 +8,21 @@ data class Record(
     val name: String,
     val email: String
 )
+
+@Serializable
+data class AddRecordRequest(
+    val id: String,
+    val name: String
+)
+
+@Serializable
+data class Subject(
+    val id: Int,
+    val name: String
+)
+
+@Serializable
+data class AddSubjectRequest(
+    val id: Int,
+    val name: String
+)
